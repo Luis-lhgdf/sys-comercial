@@ -1,0 +1,4 @@
+customtkinter>=5.2
+pillow>=10.0
+deep-translator>=1.11
+setuptools
