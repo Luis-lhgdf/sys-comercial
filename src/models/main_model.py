@@ -1,6 +1,7 @@
-import sqlite3
 import os
-from src.utils.utils import Utilities
+import sqlite3
+
+from src.utils.utils import Utilities, verify_password
 
 
 class MainModel:
@@ -231,20 +232,21 @@ class MainModel:
 
     def validate_login_db(self, login, password):
 
-        if not self.db_connection():
+        connected, _ = self.db_connection()
+        if not connected:
             # Se a conexão não puder ser estabelecida, retorne False
             return False
 
         self.db_cursor.execute(
-            "SELECT * FROM Usuarios WHERE usuario = ? AND senha = ? AND status = 'ATIVO'",
-            (login, password),
+            "SELECT senha FROM Usuarios WHERE usuario = ? AND status = 'ATIVO'",
+            (login,),
         )
-        query_result = self.db_cursor.fetchall()
+        row = self.db_cursor.fetchone()
 
         self.close_connection()
 
-        # Verifique se há algum resultado retornado pela consulta SQL
-        return bool(query_result)
+        # A senha nunca entra na consulta: compara-se o hash gravado em Python
+        return bool(row) and verify_password(password, row[0])
 
     def close_connection(self):
         try:

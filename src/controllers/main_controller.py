@@ -26,7 +26,7 @@ class MainController:
 
     def validate_login(self):
         login_get = self.view.login_entry.get()
-        password_get = self.utils.encrypt_password(self.view.password_entry.get())
+        password_get = self.view.password_entry.get()
 
         if not login_get or not password_get:
             self.utils.msgbox("Login", "Preencha todos os campos", 0)

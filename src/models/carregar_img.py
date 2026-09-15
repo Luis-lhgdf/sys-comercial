@@ -18,7 +18,7 @@ class CarregarIMG:
 
         cursor = self.conexao.cursor()
         # Buscar a imagem no banco de dados
-        cursor.execute(f"SELECT imagem FROM Usuarios where usuario = '{usuario}'")
+        cursor.execute("SELECT imagem FROM Usuarios WHERE usuario = ?", (usuario,))
         result = cursor.fetchone()
 
         if result[0] is not None:
@@ -115,7 +115,7 @@ class CarregarIMG:
         image_binary = binascii.a2b_base64(image_base64)
 
         # Verificar se já existe uma imagem com o ID 1
-        cursor.execute(f"SELECT COUNT(*) FROM Usuarios WHERE usuario = '{usuario}'")
+        cursor.execute("SELECT COUNT(*) FROM Usuarios WHERE usuario = ?", (usuario,))
         count = cursor.fetchone()[0]
 
         if count > 0:

@@ -3,6 +3,46 @@ import webbrowser
 import customtkinter as ctk
 import re
 import hashlib
+import hmac
+import os
+
+PBKDF2_ITERATIONS = 200_000
+
+
+def hash_password(password: str) -> str:
+    """Gera o hash da senha com PBKDF2-HMAC-SHA256 e salt aleatório.
+
+    Formato gravado: pbkdf2_sha256$<iterações>$<salt hex>$<hash hex>
+    """
+    salt = os.urandom(16)
+    derived = hashlib.pbkdf2_hmac(
+        "sha256", password.encode("utf-8"), salt, PBKDF2_ITERATIONS
+    )
+    return f"pbkdf2_sha256${PBKDF2_ITERATIONS}${salt.hex()}${derived.hex()}"
+
+
+def verify_password(password: str, stored: str) -> bool:
+    """Compara a senha digitada com o hash gravado, em tempo constante.
+
+    Aceita o formato novo (PBKDF2 com salt) e, para bancos criados antes desta
+    versão, o formato antigo (SHA-256 puro em hex).
+    """
+    if not stored:
+        return False
+    if stored.startswith("pbkdf2_sha256$"):
+        try:
+            _, iterations, salt_hex, hash_hex = stored.split("$")
+            derived = hashlib.pbkdf2_hmac(
+                "sha256",
+                password.encode("utf-8"),
+                bytes.fromhex(salt_hex),
+                int(iterations),
+            )
+        except (ValueError, TypeError):
+            return False
+        return hmac.compare_digest(derived.hex(), hash_hex)
+    legacy = hashlib.sha256(password.encode("utf-8")).hexdigest()
+    return hmac.compare_digest(legacy, stored)
 
 
 class Utilities:
@@ -116,10 +156,10 @@ class Utilities:
             return True
 
     def encrypt_password(self, password):
-        # Convertendo a senha para bytes, pois o hashlib espera uma sequência de bytes
-        password_bytes = password.encode("utf-8")
+        """Hash da senha para gravar no banco (PBKDF2 com salt)."""
+        return hash_password(password)
 
-        # Criptografando a senha usando SHA-256
-        hashed_password = hashlib.sha256(password_bytes).hexdigest()
-
-        return hashed_password
+    @staticmethod
+    def verify_password(password, stored):
+        """Confere a senha digitada contra o hash gravado."""
+        return verify_password(password, stored)

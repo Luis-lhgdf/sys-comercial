@@ -10,3 +10,9 @@ env/
 *.log
 .DS_Store
 Thumbs.db
+
+# banco de dados e caminho local: criados pelo próprio sistema no primeiro uso
+*.db
+*.sqlite
+*.sqlite3
+src/data/database_location.txt
